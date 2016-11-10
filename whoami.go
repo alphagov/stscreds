@@ -1,4 +1,4 @@
-package main
+package stscreds
 
 import (
 	"fmt"
@@ -9,12 +9,7 @@ type WhoAmI struct {
 }
 
 func (w *WhoAmI) Execute() error {
-	creds, err := DefaultLimitedAccessCredentials(w.Profile)
-	if err != nil {
-		return err
-	}
-
-	sess, err := creds.NewSession()
+	sess, err := newLimitedAccessSession(w.Profile)
 	if err != nil {
 		return err
 	}

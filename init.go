@@ -1,4 +1,4 @@
-package main
+package stscreds
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"gopkg.in/ini.v1"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -51,11 +52,11 @@ func (c *InitCommand) writeFile(accessKey, secretKey, path string) error {
 
 func warnOnEnvironmentVariables() {
 	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
-		fmt.Fprintf(os.Stderr, "warning: AWS_ACCESS_KEY_ID environment variable set, may override sts credentials initialised in ~/.aws/credentials.\nwarning: AWS_ACCESS_KEY_ID should probably be removed from your environment; check ~/.bash_profile etc.\n")
+		fmt.Fprint(os.Stderr, "warning: AWS_ACCESS_KEY_ID environment variable set, may override sts credentials initialised in ~/.aws/credentials.\nwarning: AWS_ACCESS_KEY_ID should probably be removed from your environment; check ~/.bash_profile etc.\n")
 	}
 
 	if os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
-		fmt.Fprintf(os.Stderr, "warning: AWS_SECRET_ACCESS_KEY environment variable set, may override sts credentials initialised in ~/.aws/credentials.\nwarning: AWS_SECRET_ACCESS_KEY should probably be removed from your environment; check ~/.bash_profile etc.\n")
+		fmt.Fprint(os.Stderr, "warning: AWS_SECRET_ACCESS_KEY environment variable set, may override sts credentials initialised in ~/.aws/credentials.\nwarning: AWS_SECRET_ACCESS_KEY should probably be removed from your environment; check ~/.bash_profile etc.\n")
 	}
 }
 
@@ -76,13 +77,13 @@ func (k *Keys) Valid() (bool, error) {
 
 func readFromPrompt() (*Keys, error) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Fprintf(os.Stderr, "AWS Access Key: ")
+	fmt.Fprint(os.Stderr, "AWS Access Key: ")
 	text, err := reader.ReadString('\n')
 	if err != nil {
 		return nil, err
 	}
 	accessKey := strings.Trim(text, " \n")
-	fmt.Fprintf(os.Stderr, "AWS Secret Access Key: ")
+	fmt.Fprint(os.Stderr, "AWS Secret Access Key: ")
 	text, err = reader.ReadString('\n')
 	if err != nil {
 		return nil, err
@@ -109,7 +110,11 @@ func readAWSKeys() (*Keys, error) {
 func (cmd *InitCommand) Execute() error {
 	warnOnEnvironmentVariables()
 
-	creds, err := DefaultLimitedAccessCredentials(cmd.Profile)
+	path, err := limitedAccessCredentialsPath()
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Dir(path), 0700)
 	if err != nil {
 		return err
 	}
@@ -119,32 +124,11 @@ func (cmd *InitCommand) Execute() error {
 		return fmt.Errorf("error with aws credentials: %s", err.Error())
 	}
 
-	err = creds.Initialise(keys)
+	err = cmd.writeFile(keys.AccessKey, keys.SecretKey, path)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", creds.path)
-
-	// path, err := limitedAccessCredentialsPath()
-	// if err != nil {
-	// 	return err
-	// }
-	// err = os.MkdirAll(filepath.Dir(path), 0700)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// keys, err := readAWSKeys()
-	// if err != nil {
-	// 	return fmt.Errorf("error with aws credentials: %s", err.Error())
-	// }
-	//
-	// err = cmd.writeFile(keys.AccessKey, keys.SecretKey, path)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", path)
+	fmt.Fprintf(os.Stderr, "Successfully wrote %s\n", path)
 	return nil
 }
