@@ -1,3 +1,7 @@
+# Credits
+
+This work is derived from [stscreds](https://github.com/uswitch/stscreds) which was under the license in file `LICENSE`.
+
 # stscreds
 
 stscreds makes it easier to work with temporary AWS API keys and, by extension, easier to stop using long-term credentials.
