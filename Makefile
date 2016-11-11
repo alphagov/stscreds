@@ -1,25 +1,37 @@
-.PHONY: clean,gh-release
-
 MAC = GOOS=darwin GOARCH=amd64
 LINUX = GOOS=linux GOARCH=amd64
-SOURCES = $(shell find *.go)
+PACKAGE = github.com/sonofbytes/stscreds
+COMMAND = ${PACKAGE}/cmd/stscreds
+SOURCES = $(shell find ${GOPATH}/src/${PACKAGE} -name \*.go)
 FLAGS = -ldflags "-X main.versionNumber=${VERSION}"
 VERSION ?= DEVELOPMENT
 
-RELEASE_TARBALL = release/stscreds-${VERSION}.tar.gz
+RELEASE_TARBALL = ${GOPATH}/release/stscreds-${VERSION}.tar.gz
 
-${RELEASE_TARBALL}: release/mac/stscreds release/linux/stscreds
-	mkdir -p release/
-	tar -zcf ${RELEASE_TARBALL} -C release/ mac/stscreds linux/stscreds
+default: build
 
-release/mac/stscreds: ${SOURCES}
-	${MAC} go build ${FLAGS} -o release/mac/stscreds
+${RELEASE_TARBALL}: ${GOPATH}/release/mac/stscreds ${GOPATH}/release/linux/stscreds
+	mkdir -p ${GOPATH}/release/
+	tar -zcf ${RELEASE_TARBALL} -C ${GOPATH}/release/ mac/stscreds linux/stscreds
 
-release/linux/stscreds: ${SOURCES}
-	${LINUX} go build ${FLAGS} -o release/linux/stscreds
+${GOPATH}/release/mac/stscreds: ${SOURCES}
+	${MAC} go build ${FLAGS} -o ${GOPATH}/release/mac/stscreds ${COMMAND}
+	chmod +x ${GOPATH}/release/mac/stscreds
 
-gh-release: ${RELEASE_TARBALL}
-	gh-release create uswitch/stscreds ${VERSION}
+${GOPATH}/release/linux/stscreds: ${SOURCES}
+	${LINUX} go build ${FLAGS} -o ${GOPATH}/release/linux/stscreds ${COMMAND}
+	chmod +x ${GOPATH}/release/linux/stscreds
+
+${GOPATH}/bin/stscreds: ${SOURCES}
+	go build ${FLAGS} -o ${GOPATH}/bin/stscreds ${COMMAND}
+	chmod +x ${GOPATH}/bin/stscreds
+
+release: ${RELEASE_TARBALL}
+
+build: ${GOPATH}/bin/stscreds
 
 clean:
-	rm -rf release/
+	rm -f ${GOPATH}/release/linux/stscreds
+	rm -f ${GOPATH}/release/mac/stscreds
+	rm -f ${GOPATH}/bin/stscreds
+	rm -f ${RELEASE_TARBALL}
