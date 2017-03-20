@@ -31,7 +31,11 @@ You can download binary releases (for Linux and Darwin) from GitHub: [https://gi
 
 ```
 $ go get github.com/alphagov/stscreds
+$ cd $GOPATH/src/alphagov/stscreds
+$ make
 ```
+
+The resulting binary will now be at `$GOPATH/bin/stscreds`.
 
 ## Setup
 ### IAM Policy
