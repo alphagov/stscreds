@@ -5,7 +5,7 @@ import (
 	"github.com/alecthomas/kingpin"
 	"os"
 	"errors"
-	"github.com/sonofbytes/stscreds"
+	"github.com/alphagov/stscreds"
 )
 
 var (

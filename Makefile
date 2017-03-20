@@ -1,6 +1,6 @@
 MAC = GOOS=darwin GOARCH=amd64
 LINUX = GOOS=linux GOARCH=amd64
-PACKAGE = github.com/sonofbytes/stscreds
+PACKAGE = github.com/alphagov/stscreds
 COMMAND = ${PACKAGE}/cmd/stscreds
 SOURCES = $(shell find ${GOPATH}/src/${PACKAGE} -name \*.go)
 FLAGS = -ldflags "-X main.versionNumber=${VERSION}"
